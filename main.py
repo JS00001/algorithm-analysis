@@ -13,7 +13,7 @@ class Graph:
         self.graph[source][destination] = capacity
         self.original_graph[source][destination] = capacity
 
-    # Depth-first search to find a path from source to sink
+    # Depth-first search to find a path from start to end
     def _dfs(self, start, end, visited, path):
         visited[start] = True
 
@@ -31,7 +31,7 @@ class Graph:
                 
         return False
 
-    # Ford-Fulkerson algorithm to find the maximum flow from source to sink
+    # Ford-Fulkerson algorithm to find the maximum flow from start to end
     def ford_fulkerson(self, start, end):
         max_flow = 0
         path = [-1] * self.vertices
@@ -59,10 +59,7 @@ class Graph:
 
         return max_flow
 
-    '''
-    Visualize the flow through the graph
-    :param flow_data: A dictionary containing the flow data for each edge
-    '''
+    # Visualuize the default graph and the residual graph
     def visualize_flow(self, flow_data):
         directed_graph = nx.DiGraph()
 
@@ -104,8 +101,39 @@ class Graph:
         plt.title("Network Flow")
         plt.show()
 
+        # Also plot the residual graph
+        residual_graph = nx.DiGraph()
+
+        for vertice_index in range(self.vertices):
+            for vertice, capacity in self.graph[vertice_index].items():
+                if capacity > 0:
+                    residual_graph.add_edge(vertice_index, vertice, capacity=capacity)\
+                    
+        plt.figure(figsize=(10, 8))
+        labels = nx.get_edge_attributes(residual_graph, 'capacity')
+
+        # Draw each edge with its capacity
+
+        nx.draw(
+            residual_graph, 
+            positions, 
+            with_labels=True, 
+            node_size=700, 
+            node_color='green', 
+            font_weight='bold', 
+            font_size=12
+            )
+        
+        # Draw edge labels
+        nx.draw_networkx_edge_labels(residual_graph, positions, edge_labels=labels)
+
+        plt.title("Residual Graph")
+
+        plt.show()
+        
+
 if __name__ == "__main__":
-    graph = Graph(6)
+    graph_1 = Graph(6)
     edges = [
         (0, 1, 11),
         (0, 2, 12),
@@ -117,23 +145,51 @@ if __name__ == "__main__":
         (4, 5, 4)
     ]
 
-    # Add the edges to the graph
     for source, destination, capacity in edges:
-        graph.add_edge(source, destination, capacity)
+        graph_1.add_edge(source, destination, capacity)
 
-    start = 0
-    end = 5
+    graph_2 = Graph(9)
+    edges_2 = [
+        (1, 2, 20),
+        (1, 3, 15),
+        (2, 4, 10),
+        (2, 5, 15),
+        (3, 4, 13),
+        (3, 6, 15),
+        (3, 7, 10),
+        (4, 3, 13),
+        (4, 5, 10),
+        (4, 7, 12),
+        (5, 6, 7),
+        (5, 2, 15),
+        (5, 8, 10), 
+        (6, 5, 7),
+        (6, 8, 10),
+        (6, 7, 8),
+        (7, 6, 8),
+        (7, 8, 10),
+    ]
 
-    # Find the maximum flow from source to sink
-    max_flow = graph.ford_fulkerson(start, end)
-    print(f"The maximum possible flow is {max_flow}")
+    for source, destination, capacity in edges_2:
+        graph_2.add_edge(source, destination, capacity)
 
-    # Now, visualize the flow through the graph
-    flow_data = {}
-    for source in range(graph.vertices):
-        for target in graph.graph[source].keys():
-            flow = graph.graph[target][source]
-            if flow > 0:
-                flow_data[(target, source)] = flow
+    # [(source, destination, capacity)]
+    graphs = [
+        (graph_1, 0, 5),
+        (graph_2, 1, 8)
+    ]
 
-    graph.visualize_flow(flow_data)
+    for graph, start, end in graphs:
+        # Find the maximum flow from source to sink
+        max_flow = graph.ford_fulkerson(start, end)
+        print(f"The maximum possible flow is {max_flow}")
+
+        # Now, visualize the flow through the graph
+        flow_data = {}
+        for source in range(graph.vertices):
+            for target in graph.graph[source].keys():
+                flow = graph.graph[target][source]
+                if flow > 0:
+                    flow_data[(target, source)] = flow
+
+        graph.visualize_flow(flow_data)
